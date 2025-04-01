@@ -43,13 +43,39 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    console.log('Continuing without database persistence - messages will not be saved');
-  });
+// MongoDB Connection with retry logic
+const connectToMongoDB = async (retryCount = 5, initialDelay = 3000) => {
+  let currentRetry = 0;
+  let delay = initialDelay;
+
+  const connect = async () => {
+    try {
+      console.log(`Attempting to connect to MongoDB (attempt ${currentRetry + 1}/${retryCount})...`);
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+        socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      });
+      console.log('Connected to MongoDB');
+      return true;
+    } catch (err) {
+      console.error('MongoDB connection error:', err);
+      return false;
+    }
+  };
+
+  while (currentRetry < retryCount) {
+    const connected = await connect();
+    if (connected) return true;
+    
+    console.log(`Connection failed. Retrying in ${delay / 1000} seconds...`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    currentRetry++;
+    delay *= 1.5; // Exponential backoff
+  }
+
+  console.log('Failed to connect to MongoDB after multiple attempts. Using in-memory storage.');
+  return false;
+};
 
 // In-memory message store for fallback
 const inMemoryMessages = {};
@@ -159,6 +185,13 @@ app.get('/', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString()
   });
+});
+
+// Call the function after defining all the routes
+// Replace the existing MongoDB connection with this:
+connectToMongoDB().catch(err => {
+  console.error('Error in MongoDB connection process:', err);
+  console.log('Continuing without database persistence - messages will not be saved');
 });
 
 const PORT = process.env.PORT || 5002;
