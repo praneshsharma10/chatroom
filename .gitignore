@@ -11,7 +11,7 @@ coverage/
 out/
 build/
 dist/
-
+a.js
 # Environment variables
 .env
 .env.local

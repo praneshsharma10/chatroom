@@ -51,10 +51,16 @@ const connectToMongoDB = async (retryCount = 5, initialDelay = 3000) => {
   const connect = async () => {
     try {
       console.log(`Attempting to connect to MongoDB (attempt ${currentRetry + 1}/${retryCount})...`);
-      await mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      
+      const mongooseOptions = {
+        serverSelectionTimeoutMS: 10000, // Timeout after 10s 
         socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      });
+        // Don't use directConnection with SRV format
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+      };
+      
+      await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
       console.log('Connected to MongoDB');
       return true;
     } catch (err) {
@@ -187,8 +193,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Call the function after defining all the routes
-// Replace the existing MongoDB connection with this:
+
 connectToMongoDB().catch(err => {
   console.error('Error in MongoDB connection process:', err);
   console.log('Continuing without database persistence - messages will not be saved');
