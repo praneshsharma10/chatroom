@@ -20,29 +20,6 @@ chatroom/
 └── README.md         # Project documentation
 ```
 
-## Deployment Instructions
-
-### Frontend Deployment (Vercel)
-
-1. Push your code to GitHub
-2. Create a new project on Vercel
-3. Connect your GitHub repository
-4. Add the following environment variables:
-   - `NEXT_PUBLIC_SERVER_URL`: URL of your deployed backend server
-5. Deploy
-
-### Backend Deployment (Render/Railway)
-
-1. Push your code to GitHub
-2. Create a new Web Service on Render or a project on Railway
-3. Connect your repository
-4. Add the following environment variables:
-   - `PORT`: The port on which the server will run (usually provided by the platform)
-   - `MONGODB_URI`: MongoDB connection string
-   - `CLIENT_URL`: URL of your Vercel frontend deployment
-5. Deploy
-
-## Local Development
 
 ### Prerequisites
 
